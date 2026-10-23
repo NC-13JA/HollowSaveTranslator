@@ -283,6 +283,72 @@ public class MainActivity extends Activity {
         }
     }
 
+    private String fieldDescription(String path, String type) {
+        String key = path;
+        if (key.contains("/")) key = key.substring(key.lastIndexOf("/") + 1);
+        key = key.replace("~1", "/").replace("~0", "~");
+        String k = key.toLowerCase(Locale.ROOT);
+
+        if ("geo".equals(k)) return "المال الذي تجمعه في اللعبة.";
+        if ("health".equals(k)) return "عدد نقاط الصحة الحالية.";
+        if ("maxhealth".equals(k)) return "الحد الأقصى لنقاط الصحة.";
+        if ("playtime".equals(k)) return "مدة اللعب المسجلة في ملف الحفظ.";
+        if ("maxhealthbase".equals(k)) return "قيمة الصحة الأساسية القصوى.";
+        if ("MPCharge".equalsIgnoreCase(key) || "mpcharge".equals(k)) return "طاقة الروح المتاحة أو المخزنة.";
+        if ("MPReserve".equalsIgnoreCase(key) || "mpreserve".equals(k)) return "مخزون الروح الإضافي.";
+        if ("hasmap".equals(k) || "map".equals(k)) return "حالة امتلاك الخريطة أو بياناتها.";
+        if ("equippedcharms".equals(k)) return "قائمة التعويذات المجهزة حاليًا.";
+        if ("charms".equals(k)) return "بيانات التعويذات التي جُمعت أو فُتحت.";
+        if ("naildamage".equals(k)) return "قيمة الضرر الذي يسببه السيف (Nail).";
+        if ("nail".equals(k)) return "حالة السيف أو بيانات تطويره.";
+        if ("maskshards".equals(k)) return "عدد شظايا الأقنعة التي جُمعت.";
+        if ("vesselfragments".equals(k)) return "عدد شظايا وعاء الروح التي جُمعت.";
+        if ("grubs".equals(k)) return "بيانات اليرقات التي تم العثور عليها أو إنقاذها.";
+        if ("essence".equals(k)) return "كمية الجوهر (Essence) المسجلة.";
+        if ("dreamnail".equals(k)) return "حالة الحصول على مسمار الأحلام.";
+        if ("hasdash".equals(k) || "dash".equals(k)) return "هل قدرة الاندفاع مفتوحة.";
+        if ("haswalljump".equals(k) || "walljump".equals(k)) return "هل القفز على الجدران مفتوح.";
+        if ("hasdoublejump".equals(k) || "doublejump".equals(k)) return "هل القفزة الإضافية مفتوحة.";
+        if ("haswalljump".equals(k)) return "هل القدرة على القفز من الجدار متاحة.";
+        if ("haslantern".equals(k) || "lantern".equals(k)) return "حالة امتلاك الفانوس.";
+        if ("stag".equals(k) || k.contains("stagstation")) return "حالة محطة عربة الـ Stag للتنقل السريع.";
+        if ("godseekerunlocked".equals(k)) return "هل تم فتح محتوى Godseeker.";
+        if ("radiance".equals(k)) return "بيانات مرتبطة بزعيم Radiance.";
+        if ("bossrushmode".equals(k)) return "حالة طور تحديات الزعماء.";
+        if ("currentbosssequence".equals(k)) return "بيانات تسلسل تحدي الزعماء الحالي.";
+        if ("scenedata".equals(k)) return "مجموعة بيانات تغيّر حالة العناصر داخل مشاهد اللعبة.";
+        if ("georocks".equals(k)) return "سجلات صخور المال الموجودة في المشاهد.";
+        if ("persistentboolitems".equals(k)) return "حالات تشغيل/تفعيل العناصر المحفوظة في المشاهد.";
+        if ("persistentintitems".equals(k)) return "قيم رقمية محفوظة لعناصر المشاهد.";
+        if ("viewedbossscenecompletions".equals(k)) return "قائمة مشاهد إكمال الزعماء التي سُجلت كمشاهدة.";
+        if (k.startsWith("killed")) return "هل تم تسجيل هزيمة هذا العدو أو الزعيم.";
+        if (k.startsWith("kills")) return "عدد مرات قتل هذا العدو المسجلة.";
+        if (k.startsWith("newdata")) return "هل تم تسجيل بيانات/مدخل جديد لهذا العدو.";
+        if (k.startsWith("statueState".toLowerCase(Locale.ROOT))) return "حالة تمثال الزعيم: الظهور والفتح ومستويات الإكمال.";
+        if (k.startsWith("completedtier")) return "هل اكتمل مستوى التحدي المحدد.";
+        if (k.startsWith("unlocked") || k.startsWith("has") || k.startsWith("got") || k.startsWith("opened")) return "يوضح هل تم الحصول على هذا الشيء أو فتحه.";
+        if (k.startsWith("seen") || k.startsWith("viewed")) return "يوضح هل شاهد اللاعب هذا المشهد أو العنصر.";
+        if (k.startsWith("given")) return "يوضح هل تم تسليم هذا العنصر لشخصية.";
+        if (k.startsWith("health")) return "قيمة مرتبطة بصحة اللاعب.";
+        if (k.contains("charm")) return "بيانات مرتبطة بالتعويذات وامتلاكها أو تجهيزها.";
+        if (k.contains("nail")) return "بيانات مرتبطة بالسيف أو تطويره أو استخدامه.";
+        if (k.contains("soul") || k.contains("mpcharge")) return "بيانات مرتبطة بطاقة الروح.";
+        if (k.contains("mask") || k.contains("health")) return "بيانات مرتبطة بالصحة أو الأقنعة.";
+        if (k.contains("grub")) return "بيانات مرتبطة باليرقات وإنقاذها.";
+        if (k.contains("boss") || k.contains("statue")) return "بيانات مرتبطة بالزعماء أو تحدياتهم.";
+        if (k.contains("map") || k.contains("mapzone")) return "بيانات مرتبطة بالخرائط أو المناطق.";
+        if (k.contains("scene") || k.contains("door") || k.contains("lever")) return "حالة عنصر أو حدث داخل أحد مشاهد اللعبة.";
+        if (k.contains("dream")) return "بيانات مرتبطة بعناصر أو قدرات الأحلام.";
+        if (k.contains("geo")) return "بيانات مرتبطة بالمال (Geo) أو مصادره.";
+        if ("object".equals(type)) return "مجموعة حقول فرعية؛ افتحها عبر البحث عن اسم الحقل أو مساره.";
+        if ("array".equals(type)) return "قائمة عناصر محفوظة؛ ابحث باسمها أو برقم العنصر في المسار.";
+        if ("boolean".equals(type)) return "خيار حالة: true تعني نعم/مفعّل، وfalse تعني لا/غير مفعّل.";
+        if ("number".equals(type)) return "قيمة رقمية داخل ملف الحفظ؛ غيّرها فقط إذا كنت تعرف أثرها.";
+        if ("string".equals(type)) return "نص أو معرّف تستخدمه اللعبة لحفظ هذه المعلومة.";
+        if ("null".equals(type)) return "قيمة فارغة محفوظة كما هي.";
+        return "معلومة داخلية من بيانات حفظ اللعبة.";
+    }
+
     private void addField(String path, Object value) {
         String type = value == JSONObject.NULL ? "null" :
                 value instanceof JSONObject ? "object" :
@@ -313,6 +379,11 @@ public class MainActivity extends Activity {
         label.setTextColor(0xFFB8E9E4);
         label.setTextIsSelectable(true);
         row.addView(label);
+
+        TextView explanation = text(fieldDescription(path, type), 11);
+        explanation.setTextColor(0xFFB4C7D0);
+        explanation.setPadding(0, 0, 0, dp(5));
+        row.addView(explanation);
 
         EditText input = null;
         if (editable) {
