@@ -89,9 +89,7 @@ public class MainActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(14), dp(12), dp(14), dp(10));
         root.setLayoutDirection(View.LAYOUT_DIRECTION_LOCALE);
-        GradientDrawable backdrop = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{0xFF071523, 0xFF102B3B, 0xFF07111D});
-        root.setBackground(backdrop);
+        root.setBackgroundResource(com.nc13ja.hollowsavetranslator.R.drawable.bg_hallownight);
 
         LinearLayout hero = new LinearLayout(this);
         hero.setGravity(Gravity.CENTER_VERTICAL);
@@ -280,6 +278,7 @@ public class MainActivity extends Activity {
             JSONArray arr = (JSONArray)value;
             for (int i = 0; i < arr.length(); i++) scanValue(arr.get(i), childPath(path, String.valueOf(i)));
         } else {
+            if (value == JSONObject.NULL) nullCount++;
             addField(path, value);
         }
     }
