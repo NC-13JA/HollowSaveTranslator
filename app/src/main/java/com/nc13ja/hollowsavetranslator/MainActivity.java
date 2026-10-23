@@ -241,8 +241,26 @@ public class MainActivity extends Activity {
             if (bytes[i] != HEADER[i]) throw new IllegalArgumentException("الترويسة لا تطابق صيغة PC المعروفة. لم يتم تعديل الملف.");
         }
         if (bytes[bytes.length - 1] != 11) throw new IllegalArgumentException("نهاية الملف غير متوقعة؛ قد تكون الصيغة أو نسخة اللعبة مختلفة.");
-        byte[] b64 = new byte[bytes.length - HEADER.length - 1];
-        System.arraycopy(bytes, HEADER.length, b64, 0, b64.length);
+        // Read the C# 7-bit encoded length before Base64. Do not feed length bytes
+        // into the Base64 decoder: some length bytes can accidentally be valid Base64 characters.
+        int cursor = HEADER.length;
+        int payloadLength = 0;
+        int shift = 0;
+        boolean lengthComplete = false;
+        while (cursor < bytes.length - 1 && shift < 35) {
+            int b = bytes[cursor++] & 0xFF;
+            payloadLength |= (b & 0x7F) << shift;
+            if ((b & 0x80) == 0) {
+                lengthComplete = true;
+                break;
+            }
+            shift += 7;
+        }
+        if (!lengthComplete || payloadLength <= 0 || cursor + payloadLength != bytes.length - 1) {
+            throw new IllegalArgumentException("طول بيانات الحفظ غير صحيح؛ لم يتم تعديل الملف.");
+        }
+        byte[] b64 = new byte[payloadLength];
+        System.arraycopy(bytes, cursor, b64, 0, payloadLength);
         byte[] cipherText = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(KEY.getBytes(StandardCharsets.UTF_8), "AES"));
