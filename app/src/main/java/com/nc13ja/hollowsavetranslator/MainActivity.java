@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.content.Intent;
 import android.net.Uri;
 import android.graphics.Typeface;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.text.Editable;
@@ -85,45 +87,80 @@ public class MainActivity extends Activity {
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(16), dp(12), dp(16), dp(8));
+        root.setPadding(dp(14), dp(12), dp(14), dp(10));
         root.setLayoutDirection(View.LAYOUT_DIRECTION_LOCALE);
+        GradientDrawable backdrop = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xFF071523, 0xFF102B3B, 0xFF07111D});
+        root.setBackground(backdrop);
 
-        TextView title = text("Hollow Save Translator", 24);
+        LinearLayout hero = new LinearLayout(this);
+        hero.setGravity(Gravity.CENTER_VERTICAL);
+        hero.setOrientation(LinearLayout.HORIZONTAL);
+        hero.setPadding(dp(14), dp(12), dp(14), dp(12));
+        GradientDrawable heroBg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFF173A4C, 0xFF102334});
+        heroBg.setCornerRadius(dp(20));
+        hero.setBackground(heroBg);
+        android.widget.ImageView emblem = new android.widget.ImageView(this);
+        emblem.setImageResource(com.nc13ja.hollowsavetranslator.R.drawable.ic_knight);
+        emblem.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+        hero.addView(emblem, new LinearLayout.LayoutParams(dp(68), dp(78)));
+        LinearLayout heading = new LinearLayout(this);
+        heading.setOrientation(LinearLayout.VERTICAL);
+        heading.setPadding(dp(12), 0, 0, 0);
+        TextView title = text("HOLLOW SAVE", 22);
+        title.setTextColor(0xFFF0F5F7);
         title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        root.addView(title);
-        TextView intro = text("محرر محلي لملف الحفظ: يعرض جميع القيم البدائية داخل JSON، بما فيها القيم الموجودة في المصفوفات. ابحث عن المهارات أو الأدوات أو الأسلحة أو الموارد باسم الحقل أو مساره.", 14);
-        root.addView(intro);
+        heading.addView(title);
+        TextView subtitle = text("TRANSLATOR  •  SAVE EDITOR", 11);
+        subtitle.setTextColor(0xFF9CC7D4);
+        heading.addView(subtitle);
+        TextView intro = text("محرّر محلي لعرض بيانات الحفظ والبحث فيها وتصدير نسخة معدّلة.", 13);
+        intro.setTextColor(0xFFD5E4EA);
+        heading.addView(intro);
+        hero.addView(heading, new LinearLayout.LayoutParams(0, -2, 1));
+        root.addView(hero);
 
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
-        Button open = new Button(this);
-        open.setText("فتح ملف");
+        actions.setPadding(0, dp(10), 0, dp(4));
+        Button open = makeButton("＋  فتح ملف", true);
         open.setOnClickListener(v -> {
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             i.setType("*/*");
             i.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(i, PICK_SAVE);
         });
-        actions.addView(open, new LinearLayout.LayoutParams(0, -2, 1));
-        Button backup = new Button(this);
-        backup.setText("نسخ الأصل");
+        actions.addView(open, new LinearLayout.LayoutParams(0, dp(48), 1));
+        Button backup = makeButton("نسخ احتياطي", false);
         backup.setOnClickListener(v -> exportOriginal());
-        actions.addView(backup, new LinearLayout.LayoutParams(0, -2, 1));
+        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(0, dp(48), 1);
+        bp.setMargins(dp(8), 0, 0, 0);
+        actions.addView(backup, bp);
         root.addView(actions);
 
-        status = text("اختر ملف حفظ PC متوافقًا للبدء.", 14);
+        status = text("اختر ملف حفظ PC متوافقًا للبدء.", 12);
+        status.setTextColor(0xFFB8D3DE);
         root.addView(status);
-
-        summary = text("لم يتم تحميل بيانات.", 13);
+        summary = text("لم يتم تحميل بيانات بعد.", 12);
+        summary.setTextColor(0xFF78D9CF);
         summary.setTypeface(null, Typeface.BOLD);
         root.addView(summary);
 
         search = new EditText(this);
         search.setSingleLine(true);
-        search.setHint("بحث: geo، charm، ability، nail، grub...");
+        search.setTextColor(0xFFF3F7F9);
+        search.setHintTextColor(0xFF90AAB6);
+        search.setHint("⌕  ابحث في المسارات والقيم: geo، charm، nail، grub…");
+        search.setTextSize(14);
+        search.setPadding(dp(14), dp(4), dp(14), dp(4));
+        GradientDrawable searchBg = new GradientDrawable();
+        searchBg.setColor(0xFF142A39);
+        searchBg.setCornerRadius(dp(14));
+        searchBg.setStroke(dp(1), 0xFF315363);
+        search.setBackground(searchBg);
         search.setInputType(InputType.TYPE_CLASS_TEXT);
-        root.addView(search);
+        root.addView(search, new LinearLayout.LayoutParams(-1, dp(50)));
         search.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) { filterFields(s.toString()); }
@@ -131,18 +168,38 @@ public class MainActivity extends Activity {
         });
 
         ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(false);
         fieldContainer = new LinearLayout(this);
         fieldContainer.setOrientation(LinearLayout.VERTICAL);
+        fieldContainer.setPadding(0, dp(8), 0, dp(8));
         scroll.addView(fieldContainer);
-        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, 0, 1);
+        sp.topMargin = dp(4);
+        root.addView(scroll, sp);
 
-        Button save = new Button(this);
-        save.setText("تصدير التعديلات إلى ملف جديد");
+        Button save = makeButton("تصدير التعديلات إلى ملف جديد  ↓", true);
         save.setOnClickListener(v -> exportEdited());
-        root.addView(save);
-        TextView warning = text("تنبيه: احتفظ بالأصل. بعض الحقول الداخلية مترابطة؛ تغيير قيمة عشوائيًا قد يؤثر في تقدم اللعبة. لم يُختبر الملف داخل اللعبة بعد.", 12);
+        root.addView(save, new LinearLayout.LayoutParams(-1, dp(52)));
+        TextView warning = text("احتفظ بالأصل دائمًا. بعض الحقول مترابطة؛ اختبر الملف الجديد قبل اعتماده.", 11);
+        warning.setTextColor(0xFFFFD18A);
         root.addView(warning);
         setContentView(root);
+    }
+
+    private Button makeButton(String label, boolean primary) {
+        Button b = new Button(this);
+        b.setText(label);
+        b.setAllCaps(false);
+        b.setTextSize(13);
+        b.setTypeface(null, Typeface.BOLD);
+        b.setTextColor(primary ? 0xFF08212B : 0xFFE3F2F5);
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                primary ? new int[]{0xFF77E1D0, 0xFFB6E9D6} : new int[]{0xFF234454, 0xFF1B3546});
+        bg.setCornerRadius(dp(15));
+        if (!primary) bg.setStroke(dp(1), 0xFF416477);
+        b.setBackground(bg);
+        b.setPadding(dp(8), 0, dp(8), 0);
+        return b;
     }
 
     private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_LONG).show(); }
@@ -197,7 +254,7 @@ public class MainActivity extends Activity {
         objectCount = 0; arrayCount = 0; nullCount = 0;
         scanValue(parsed, "");
         filterFields(search.getText().toString());
-        summary.setText("الحقول: " + fields.size() + " | كائنات: " + objectCount + " | مصفوفات: " + arrayCount + " | قيم null: " + nullCount);
+        summary.setText("كل العقد: " + fields.size() + "  •  كائنات: " + objectCount + "  •  مصفوفات: " + arrayCount + "  •  قيم null: " + nullCount);
         status.setText("تم فتح " + sourceName + " وفك تشفيره محليًا. ابحث في كل المسارات، ثم صدّر نسخة جديدة.");
     }
 
@@ -207,8 +264,10 @@ public class MainActivity extends Activity {
     }
 
     private void scanValue(Object value, String path) throws JSONException {
+        // Add containers as visible entries too, including empty objects and arrays.
         if (value instanceof JSONObject) {
             objectCount++;
+            addField(path, value);
             JSONObject obj = (JSONObject)value;
             Iterator<String> keys = obj.keys();
             while (keys.hasNext()) {
@@ -217,6 +276,7 @@ public class MainActivity extends Activity {
             }
         } else if (value instanceof JSONArray) {
             arrayCount++;
+            addField(path, value);
             JSONArray arr = (JSONArray)value;
             for (int i = 0; i < arr.length(); i++) scanValue(arr.get(i), childPath(path, String.valueOf(i)));
         } else {
@@ -226,37 +286,65 @@ public class MainActivity extends Activity {
 
     private void addField(String path, Object value) {
         String type = value == JSONObject.NULL ? "null" :
+                value instanceof JSONObject ? "object" :
+                value instanceof JSONArray ? "array" :
                 value instanceof Boolean ? "boolean" :
                 value instanceof Number ? "number" : "string";
-        boolean editable = !"null".equals(type);
-        String shown = value == JSONObject.NULL ? "null" : String.valueOf(value);
+        boolean editable = "number".equals(type) || "boolean".equals(type) || "string".equals(type);
+        String shown;
+        if (value == JSONObject.NULL) shown = "null";
+        else if (value instanceof JSONObject) shown = "كائن • " + ((JSONObject)value).length() + " مفاتيح";
+        else if (value instanceof JSONArray) shown = "مصفوفة • " + ((JSONArray)value).length() + " عناصر";
+        else shown = String.valueOf(value);
 
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(dp(8), dp(5), dp(8), dp(7));
-        row.setBackgroundColor(0xFFF4F4F4);
+        row.setPadding(dp(11), dp(7), dp(11), dp(8));
+        GradientDrawable card = new GradientDrawable();
+        card.setColor(("object".equals(type) || "array".equals(type)) ? 0xFF173544 : 0xFF102633);
+        card.setCornerRadius(dp(13));
+        card.setStroke(dp(1), ("object".equals(type) || "array".equals(type)) ? 0xFF386174 : 0xFF243F4D);
+        row.setBackground(card);
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(-1, -2);
+        rowParams.bottomMargin = dp(6);
+        row.setLayoutParams(rowParams);
 
-        TextView label = text(path.isEmpty() ? "(root)" : path, 12);
+        TextView label = text(path.isEmpty() ? "playerData / الجذر" : path, 12);
         label.setTypeface(null, Typeface.BOLD);
+        label.setTextColor(0xFFB8E9E4);
         label.setTextIsSelectable(true);
         row.addView(label);
 
-        EditText input = new EditText(this);
-        input.setSingleLine(false);
-        input.setTextSize(14);
-        input.setText(shown);
-        input.setHint(type);
-        if (!editable) {
-            input.setEnabled(false);
-        } else if ("number".equals(type)) {
-            input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        } else if ("boolean".equals(type)) {
-            input.setInputType(InputType.TYPE_CLASS_TEXT);
+        EditText input = null;
+        if (editable) {
+            input = new EditText(this);
+            input.setSingleLine(false);
+            input.setTextSize(14);
+            input.setTextColor(0xFFF1F6F8);
+            input.setHintTextColor(0xFF8CA7B2);
+            input.setText(shown);
+            input.setHint(type);
+            input.setPadding(dp(9), dp(2), dp(9), dp(2));
+            GradientDrawable inputBg = new GradientDrawable();
+            inputBg.setColor(0xFF0A1B26);
+            inputBg.setCornerRadius(dp(8));
+            inputBg.setStroke(dp(1), 0xFF294957);
+            input.setBackground(inputBg);
+            if ("number".equals(type)) {
+                input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            } else if ("boolean".equals(type)) {
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+            } else {
+                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+            }
+            row.addView(input);
         } else {
-            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+            TextView preview = text(shown, 13);
+            preview.setTextColor(0xFFE2EDF1);
+            row.addView(preview);
         }
-        row.addView(input);
-        TextView typeHint = text("النوع: " + type, 10);
+        TextView typeHint = text("النوع: " + type + (editable ? " • قابل للتعديل" : " • بنية/عرض فقط"), 10);
+        typeHint.setTextColor(0xFF8EAAB6);
         row.addView(typeHint);
         fieldContainer.addView(row);
         fields.add(new Field(path, type, shown, input, label, row, editable));
@@ -334,7 +422,7 @@ public class MainActivity extends Activity {
             JSONObject edited = new JSONObject(saveJson.toString());
             int changed = 0;
             for (Field f : fields) {
-                if (!f.editable) continue;
+                if (!f.editable || f.input == null) continue;
                 String raw = f.input.getText().toString();
                 Object next = parseEditedValue(f, raw);
                 Object old = getPathValue(edited, f.path);
