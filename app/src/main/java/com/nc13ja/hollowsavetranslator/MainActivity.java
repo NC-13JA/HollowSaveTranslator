@@ -312,6 +312,33 @@ public class MainActivity extends Activity {
         key = key.replace("~1", "/").replace("~0", "~");
         String k = key.toLowerCase(Locale.ROOT);
 
+        // Charm IDs are stable in Hollow Knight PlayerData. Keep the original JSON keys untouched.
+        if (key.matches("(gotCharm|equippedCharm|charmCost|newCharm|brokenCharm)_\\d+")) {
+            int underscore = key.lastIndexOf('_');
+            int charmId;
+            try { charmId = Integer.parseInt(key.substring(underscore + 1)); }
+            catch (NumberFormatException ignored) { charmId = -1; }
+            String charm = charmName(charmId);
+            String kind = key.substring(0, underscore);
+            if ("gotCharm".equals(kind)) return "امتلاك التعويذة «" + charm + "». true تعني أن الحفظ يسجّل التعويذة ضمن ما حصل عليه اللاعب.";
+            if ("equippedCharm".equals(kind)) return "حالة تجهيز التعويذة «" + charm + "». true تعني أنها مسجّلة كمجهزة؛ تحقق من توافقها مع بقية بيانات التعويذات قبل التعديل.";
+            if ("charmCost".equals(kind)) return "تكلفة التعويذة «" + charm + "» بوحدات شقوق التعويذات (Notches).";
+            if ("newCharm".equals(kind)) return "علامة التعويذة الجديدة «" + charm + "»؛ قد تتحكم في ظهور إشعار/تمييز التعويذة كجديدة.";
+            return "حالة انكسار التعويذة الهشة «" + charm + "». لا ينطبق معنى الانكسار على التعويذات غير الهشة.";
+        }
+
+        if ("charmslots".equals(k)) return "إجمالي شقوق التعويذات (Notches) المتاحة للاعب.";
+        if ("charmslotsfilled".equals(k)) return "عدد شقوق التعويذات المستخدمة حاليًا.";
+        if ("charmsowned".equals(k)) return "عداد التعويذات التي يسجّل الحفظ أن اللاعب يمتلكها.";
+        if ("canovercharm".equals(k)) return "هل يسمح الحفظ بحالة تجاوز عدد شقوق التعويذات المتاحة.";
+        if ("overcharmed".equals(k)) return "هل اللاعب في حالة تجهيز تعويذات تتجاوز عدد الشقوق المتاحة.";
+        if ("royalcharmstate".equals(k)) return "حالة التعويذة الملكية: تساعد هذه القيمة على التمييز بين شظايا White Fragment وتعويذة Kingsoul وحالة Void Heart.";
+        if ("gotshadecharm".equals(k)) return "علامة مرتبطة بالحصول على Void Heart (قلب الفراغ)، وتُفسّر مع royalCharmState.";
+        if ("grimmchildlevel".equals(k)) return "مستوى Grimmchild في مهمة Grimm Troupe؛ تفسير التعويذة رقم 40 يعتمد على تقدم هذه المهمة.";
+        if ("fragileheart_unbreakable".equals(k)) return "هل تمت ترقية Fragile Heart إلى Unbreakable Heart.";
+        if ("fragilegreed_unbreakable".equals(k)) return "هل تمت ترقية Fragile Greed إلى Unbreakable Greed.";
+        if ("fragilestrength_unbreakable".equals(k)) return "هل تمت ترقية Fragile Strength إلى Unbreakable Strength.";
+
         if ("geo".equals(k)) return "المال (Geo): العملة التي تستخدمها للشراء من التجار. رفعها يزيد رصيدك؛ لا تغيّرها إلى قيمة سالبة.";
         if ("health".equals(k)) return "الصحة الحالية: عدد الأقنعة/نقاط الضرر التي يستطيع الفارس تحمّلها حاليًا.";
         if ("maxhealth".equals(k)) return "الحد الأقصى للصحة. قد تعتمد الزيادة الصحيحة على أقنعة الصحة المكتسبة أيضًا.";
@@ -392,6 +419,52 @@ public class MainActivity extends Activity {
         if ("string".equals(type)) return describeString(k, key);
         if ("null".equals(type)) return "قيمة فارغة محفوظة كما هي.";
         return "معلومة داخلية من بيانات حفظ اللعبة.";
+    }
+
+    private String charmName(int id) {
+        switch (id) {
+            case 1: return "سرب الجمع (Gathering Swarm)";
+            case 2: return "بوصلة التائه (Wayward Compass)";
+            case 3: return "أغنية اليرقات (Grubsong)";
+            case 4: return "الصدفة الصامدة (Stalwart Shell)";
+            case 5: return "صدفة بالدور (Baldur Shell)";
+            case 6: return "غضب الساقط (Fury of the Fallen)";
+            case 7: return "التركيز السريع (Quick Focus)";
+            case 8: return "قلب الحياة (Lifeblood Heart)";
+            case 9: return "نواة الحياة (Lifeblood Core)";
+            case 10: return "شارة المدافع (Defender's Crest)";
+            case 11: return "عش الفلُك (Flukenest)";
+            case 12: return "أشواك العذاب (Thorns of Agony)";
+            case 13: return "شارة الفخر (Mark of Pride)";
+            case 14: return "الجسد الثابت (Steady Body)";
+            case 15: return "الضربة الثقيلة (Heavy Blow)";
+            case 16: return "الظل الحاد (Sharp Shadow)";
+            case 17: return "فطر الأبواغ (Spore Shroom)";
+            case 18: return "الظفر الطويل (Longnail)";
+            case 19: return "حجر الشامان (Shaman Stone)";
+            case 20: return "ملتقط الروح (Soul Catcher)";
+            case 21: return "آكل الروح (Soul Eater)";
+            case 22: return "الرحم المتوهج (Glowing Womb)";
+            case 23: return "القلب الهش / غير القابل للكسر (Fragile / Unbreakable Heart)";
+            case 24: return "الجشع الهش / غير القابل للكسر (Fragile / Unbreakable Greed)";
+            case 25: return "القوة الهشة / غير القابلة للكسر (Fragile / Unbreakable Strength)";
+            case 26: return "مجد سيد الظفر (Nailmaster's Glory)";
+            case 27: return "بركة جوني (Joni's Blessing)";
+            case 28: return "شكل أون (Shape of Unn)";
+            case 29: return "دم الخلية (Hiveblood)";
+            case 30: return "حامل الأحلام (Dream Wielder)";
+            case 31: return "سيد الاندفاع (Dashmaster)";
+            case 32: return "الضربة السريعة (Quick Slash)";
+            case 33: return "ملتوي التعويذات (Spell Twister)";
+            case 34: return "التركيز العميق (Deep Focus)";
+            case 35: return "مرثية الغرابر فلاي (Grubberfly's Elegy)";
+            case 36: return "الشظية البيضاء / Kingsoul / Void Heart (حسب حالة التقدم)";
+            case 37: return "سيد الركض (Sprintmaster)";
+            case 38: return "درع الأحلام (Dreamshield)";
+            case 39: return "أغنية النسّاجين (Weaversong)";
+            case 40: return "Grimmchild / Carefree Melody (حسب تقدم مهمة Grimm Troupe)";
+            default: return "معرّف تعويذة غير معروف (" + id + ")";
+        }
     }
 
     private String humanizeFieldName(String key) {
