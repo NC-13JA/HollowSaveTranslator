@@ -47,6 +47,10 @@ public class MainActivity extends Activity {
     private TextView status;
     private EditText search;
     private TextView summary;
+    private Button loadMoreButton;
+    private final ArrayList<Field> filteredFields = new ArrayList<>();
+    private int renderedCount = 0;
+    private static final int PAGE_SIZE = 80;
     private int objectCount;
     private int arrayCount;
     private int nullCount;
@@ -248,6 +252,7 @@ public class MainActivity extends Activity {
         originalBytes = bytes;
         saveJson = parsed;
         fields.clear();
+        filteredFields.clear();
         fieldContainer.removeAllViews();
         objectCount = 0; arrayCount = 0; nullCount = 0;
         scanValue(parsed, "");
@@ -289,7 +294,20 @@ public class MainActivity extends Activity {
         key = key.replace("~1", "/").replace("~0", "~");
         String k = key.toLowerCase(Locale.ROOT);
 
-        if ("geo".equals(k)) return "المال الذي تجمعه في اللعبة.";
+        if ("geo".equals(k)) return "المال (Geo): العملة التي تستخدمها للشراء من التجار. رفعها يزيد رصيدك؛ لا تغيّرها إلى قيمة سالبة.";
+        if ("health".equals(k)) return "الصحة الحالية: عدد الأقنعة/نقاط الضرر التي يستطيع الفارس تحمّلها حاليًا.";
+        if ("maxhealth".equals(k)) return "الحد الأقصى للصحة. قد تعتمد الزيادة الصحيحة على أقنعة الصحة المكتسبة أيضًا.";
+        if ("hasdash".equals(k)) return "قدرة الاندفاع (Mothwing Cloak): true تعني أن القدرة مسجّلة كمكتسبة، وfalse تعني أنها غير مكتسبة.";
+        if ("haswalljump".equals(k)) return "القفز على الجدران (Mantis Claw): true تعني أن القدرة مسجّلة كمكتسبة.";
+        if ("hasdoublejump".equals(k)) return "القفزة الإضافية (Monarch Wings): true تعني أن القدرة مسجّلة كمكتسبة.";
+        if ("haslantern".equals(k)) return "فانوس Lumafly: يساعد على رؤية بعض المناطق المظلمة عند امتلاكه.";
+        if ("hasdreamnail".equals(k) || "dreamnail".equals(k)) return "مسمار الأحلام: حالة الحصول على هذه الأداة أو بياناتها.";
+        if ("naildamage".equals(k)) return "ضرر السيف (Nail) المسجّل. قد توجد قيم أخرى مرتبطة بترقية السيف.";
+        if ("mpcharge".equals(k)) return "كمية طاقة الروح المتاحة/المخزنة.";
+        if ("mpreserve".equals(k)) return "مخزون الروح الإضافي.";
+        if ("essence".equals(k)) return "كمية الجوهر (Essence) التي يجمعها اللاعب.";
+        if ("playtime".equals(k)) return "مدة اللعب المسجلة في ملف الحفظ.";
+        if ("maxhealthbase".equals(k)) return "قيمة الصحة الأساسية القصوى قبل احتساب بعض الترقيات.";
         if ("health".equals(k)) return "عدد نقاط الصحة الحالية.";
         if ("maxhealth".equals(k)) return "الحد الأقصى لنقاط الصحة.";
         if ("playtime".equals(k)) return "مدة اللعب المسجلة في ملف الحفظ.";
@@ -342,26 +360,78 @@ public class MainActivity extends Activity {
         if (k.contains("geo")) return "بيانات مرتبطة بالمال (Geo) أو مصادره.";
         if ("object".equals(type)) return "مجموعة حقول فرعية؛ افتحها عبر البحث عن اسم الحقل أو مساره.";
         if ("array".equals(type)) return "قائمة عناصر محفوظة؛ ابحث باسمها أو برقم العنصر في المسار.";
-        if ("boolean".equals(type)) return "خيار حالة: true تعني نعم/مفعّل، وfalse تعني لا/غير مفعّل.";
-        if ("number".equals(type)) return "قيمة رقمية داخل ملف الحفظ؛ غيّرها فقط إذا كنت تعرف أثرها.";
-        if ("string".equals(type)) return "نص أو معرّف تستخدمه اللعبة لحفظ هذه المعلومة.";
+        if ("boolean".equals(type)) {
+            String readable = humanizeFieldName(key);
+            if (k.startsWith("has") || k.startsWith("got") || k.startsWith("unlocked") || k.startsWith("opened"))
+                return "حالة امتلاك/فتح مرتبطة بـ«" + readable + "». true تعني أن اللعبة تسجّلها مفتوحة أو مملوكة، وfalse تعني غير ذلك. هذا استنتاج من الاسم، وليس ضمانًا لأثر التعديل.";
+            if (k.startsWith("killed") || k.startsWith("defeated"))
+                return "حالة هزيمة مرتبطة بـ«" + readable + "». true تعني أن الهزيمة مسجّلة، وfalse تعني أنها غير مسجّلة.";
+            if (k.startsWith("seen") || k.startsWith("viewed"))
+                return "حالة مشاهدة مرتبطة بـ«" + readable + "». true تعني أن المشاهدة مسجّلة، وfalse تعني أنها غير مسجّلة.";
+            return "قيمة نعم/لا تخص «" + readable + "». true = نعم، وfalse = لا؛ لكن الاسم وحده لا يكفي لمعرفة أثرها داخل اللعبة، لذلك لا تغيّرها إلا بعد تحديد وظيفة هذا المسار.";
+        }
+        if ("number".equals(type)) return describeNumber(k, key);
+        if ("string".equals(type)) return describeString(k, key);
         if ("null".equals(type)) return "قيمة فارغة محفوظة كما هي.";
         return "معلومة داخلية من بيانات حفظ اللعبة.";
     }
 
+    private String humanizeFieldName(String key) {
+        String s = key.replaceAll("([a-z])([A-Z])", "$1 $2").replace('_', ' ').replace('-', ' ');
+        String low = s.toLowerCase(Locale.ROOT);
+        String[][] words = {
+            {"health","الصحة"},{"geo","المال Geo"},{"charm","تعويذة"},{"nail","السيف"},{"damage","الضرر"},
+            {"dash","الاندفاع"},{"wall jump","القفز على الجدران"},{"double jump","القفزة الإضافية"},
+            {"grub","يرقة"},{"boss","زعيم"},{"killed","هُزم"},{"defeated","هُزم"},{"unlocked","مفتوح"},
+            {"opened","فُتح"},{"got","تم الحصول عليه"},{"has","يمتلك/لديه"},{"seen","شوهد"},{"viewed","تمت مشاهدته"},
+            {"map","الخريطة"},{"dream","الأحلام"},{"soul","الروح"},{"mask","قناع"},{"vessel","وعاء الروح"},
+            {"station","محطة"},{"gate","بوابة"},{"door","باب"},{"lever","رافعة"},{"item","عنصر"},
+            {"scene","المشهد"},{"radiance","Radiance"},{"essence","الجوهر"},{"playtime","مدة اللعب"}
+        };
+        for (String[] pair : words) low = low.replace(pair[0], pair[1]);
+        return low;
+    }
+
+    private String describeNumber(String k, String key) {
+        if (k.contains("geo")) return "عدد وحدات المال (Geo) المسجّل في هذا الموضع.";
+        if (k.contains("health") || k.contains("mask")) return "عدد/قيمة مرتبطة بالصحة أو الأقنعة. راجع الحقول المجاورة لأن الحد الأقصى قد يعتمد على أكثر من قيمة.";
+        if (k.contains("essence")) return "كمية الجوهر (Essence) المسجّلة.";
+        if (k.contains("nail") && (k.contains("damage") || k.contains("level"))) return "قيمة ضرر السيف أو مستوى تطويره؛ قد لا يكفي تغيير هذا الحقل وحده.";
+        if (k.contains("kill")) return "عداد مرات هزيمة العدو/الزعيم المسجّلة.";
+        if (k.contains("grub")) return "عدد أو حالة رقمية مرتبطة باليرقات التي تم العثور عليها/إنقاذها.";
+        if (k.contains("charm")) return "رقم داخلي مرتبط بالتعويذات. معنى الرقم الدقيق يعتمد على اسم الحقل والمسار.";
+        if (k.contains("mpcharge") || k.contains("soul")) return "كمية أو سعة مرتبطة بطاقة الروح.";
+        if (k.contains("playtime")) return "مدة اللعب المسجّلة؛ قد تكون الوحدة داخلية وليست دقائق مباشرة.";
+        if (k.contains("scene") || k.contains("statue") || k.contains("boss")) return "قيمة حالة/عداد مرتبطة بالمشهد أو الزعيم. لا تغيّر الرقم قبل تحديد معنى هذا المسار.";
+        if (k.equals("x") || k.equals("y") || k.contains("position")) return "قد تكون إحداثية مكانية داخل مشهد اللعبة؛ تعديلها قد ينقل اللاعب أو عنصرًا إلى مكان غير صالح.";
+        return "قيمة رقمية داخلية باسم «" + humanizeFieldName(key) + "». لا يمكن تحديد معناها الدقيق من الاسم وحده؛ اتركها كما هي حتى يتوفر تفسير موثوق لهذا المسار.";
+    }
+
+    private String describeString(String k, String key) {
+        if (k.contains("scene")) return "اسم/معرّف مشهد تستخدمه اللعبة لتحديد المنطقة أو مكان تسجيل الحالة. تغييره قد يجعل الحفظ يشير إلى مشهد غير صحيح.";
+        if (k.contains("name")) return "نص أو اسم محفوظ. إذا كان معرّفًا داخليًا فقد تتعطل الإشارة إلى العنصر عند تغييره.";
+        if (k.contains("id") || k.endsWith("key")) return "معرّف داخلي للعبة، وليس بالضرورة نصًا معروضًا للاعب. لا تغيّره عشوائيًا.";
+        return "نص محفوظ باسم «" + humanizeFieldName(key) + "». لا يمكن تحديد استخدامه الدقيق من الاسم وحده؛ اتركه كما هو إن لم تعرف مرجعه.";
+    }
+
+    // Defer view creation until a field is actually shown; large saves stay responsive.
     private void addField(String path, Object value) {
         String type = value == JSONObject.NULL ? "null" :
                 value instanceof JSONObject ? "object" :
                 value instanceof JSONArray ? "array" :
                 value instanceof Boolean ? "boolean" :
                 value instanceof Number ? "number" : "string";
-        boolean editable = "number".equals(type) || "boolean".equals(type) || "string".equals(type);
         String shown;
         if (value == JSONObject.NULL) shown = "null";
         else if (value instanceof JSONObject) shown = "كائن • " + ((JSONObject)value).length() + " مفاتيح";
         else if (value instanceof JSONArray) shown = "مصفوفة • " + ((JSONArray)value).length() + " عناصر";
         else shown = String.valueOf(value);
+        boolean editable = "number".equals(type) || "boolean".equals(type) || "string".equals(type);
+        fields.add(new Field(path, type, shown, null, null, null, editable));
+    }
 
+    private void createFieldView(Field f) {
+        String path = f.path, type = f.type, shown = f.originalValue;
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(dp(11), dp(7), dp(11), dp(8));
@@ -373,22 +443,19 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(-1, -2);
         rowParams.bottomMargin = dp(6);
         row.setLayoutParams(rowParams);
-
         TextView label = text(path.isEmpty() ? "playerData / الجذر" : path, 12);
         label.setTypeface(null, Typeface.BOLD);
         label.setTextColor(0xFFB8E9E4);
         label.setTextIsSelectable(true);
         row.addView(label);
-
-        TextView explanation = text(fieldDescription(path, type), 11);
-        explanation.setTextColor(0xFFB4C7D0);
+        TextView explanation = text(fieldDescription(path, type), 12);
+        explanation.setTextColor(0xFFD2E0E6);
         explanation.setPadding(0, 0, 0, dp(5));
         row.addView(explanation);
-
         EditText input = null;
-        if (editable) {
+        if (f.editable) {
             input = new EditText(this);
-            input.setSingleLine(false);
+            input.setSingleLine(!"string".equals(type));
             input.setTextSize(14);
             input.setTextColor(0xFFF1F6F8);
             input.setHintTextColor(0xFF8CA7B2);
@@ -404,6 +471,7 @@ public class MainActivity extends Activity {
                 input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
             } else if ("boolean".equals(type)) {
                 input.setInputType(InputType.TYPE_CLASS_TEXT);
+                input.setHint("اكتب true أو false");
             } else {
                 input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
             }
@@ -413,25 +481,49 @@ public class MainActivity extends Activity {
             preview.setTextColor(0xFFE2EDF1);
             row.addView(preview);
         }
-        TextView typeHint = text("النوع: " + type + (editable ? " • قابل للتعديل" : " • بنية/عرض فقط"), 10);
+        TextView typeHint = text("النوع: " + type + (f.editable ? " • قابل للتعديل" : " • بنية للعرض فقط"), 10);
         typeHint.setTextColor(0xFF8EAAB6);
         row.addView(typeHint);
-        fieldContainer.addView(row);
-        fields.add(new Field(path, type, shown, input, label, row, editable));
+        f.input = input; f.label = label; f.row = row;
     }
 
     private void filterFields(String query) {
         if (fieldContainer == null) return;
         String q = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
-        int visible = 0;
+        filteredFields.clear();
         for (Field f : fields) {
+            String desc = fieldDescription(f.path, f.type).toLowerCase(Locale.ROOT);
             boolean match = q.isEmpty() || f.path.toLowerCase(Locale.ROOT).contains(q)
                     || f.type.toLowerCase(Locale.ROOT).contains(q)
-                    || f.originalValue.toLowerCase(Locale.ROOT).contains(q);
-            f.row.setVisibility(match ? View.VISIBLE : View.GONE);
-            if (match) visible++;
+                    || f.originalValue.toLowerCase(Locale.ROOT).contains(q)
+                    || desc.contains(q);
+            if (match) filteredFields.add(f);
         }
-        if (saveJson != null) status.setText("المعروض " + visible + " من " + fields.size() + " حقل. البحث لا يحذف أي بيانات.");
+        fieldContainer.removeAllViews();
+        renderedCount = 0;
+        renderNextPage();
+        if (saveJson != null) status.setText("المعروض " + Math.min(renderedCount, filteredFields.size()) +
+                " من " + filteredFields.size() + " نتيجة مطابقة (" + fields.size() + " حقل إجمالًا).");
+    }
+
+    private void renderNextPage() {
+        int end = Math.min(renderedCount + PAGE_SIZE, filteredFields.size());
+        for (int i = renderedCount; i < end; i++) {
+            Field f = filteredFields.get(i);
+            if (f.row == null) createFieldView(f);
+            fieldContainer.addView(f.row);
+        }
+        renderedCount = end;
+        if (renderedCount < filteredFields.size()) {
+            if (loadMoreButton == null) {
+                loadMoreButton = makeButton("عرض 80 حقلًا إضافيًا", false);
+                loadMoreButton.setOnClickListener(v -> {
+                    fieldContainer.removeView(loadMoreButton);
+                    renderNextPage();
+                });
+            }
+            fieldContainer.addView(loadMoreButton, new LinearLayout.LayoutParams(-1, dp(46)));
+        }
     }
 
     private Object getPathValue(Object root, String path) throws JSONException {
