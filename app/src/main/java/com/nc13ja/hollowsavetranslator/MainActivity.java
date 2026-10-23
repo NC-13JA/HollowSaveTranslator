@@ -578,6 +578,18 @@ public class MainActivity extends Activity {
         return JSONObject.NULL;
     }
 
+    // Hollow Knight's C# save wrapper stores the Base64 payload length as a 7-bit encoded integer.
+    private byte[] cSharpLength(int length) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(5);
+        int value = length;
+        while (value >= 0x80) {
+            out.write((value & 0x7F) | 0x80);
+            value >>>= 7;
+        }
+        out.write(value & 0x7F);
+        return out.toByteArray();
+    }
+
     private void exportEdited() {
         if (saveJson == null) { toast("اختر ملف الحفظ أولًا"); return; }
         try {
@@ -599,7 +611,7 @@ public class MainActivity extends Activity {
             byte[] encrypted = cipher.doFinal(json.getBytes(StandardCharsets.UTF_8));
             byte[] encoded = android.util.Base64.encode(encrypted, android.util.Base64.NO_WRAP);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            out.write(HEADER); out.write(encoded); out.write(11);
+            out.write(HEADER); out.write(cSharpLength(encoded.length)); out.write(encoded); out.write(11);
             exportBytes = out.toByteArray();
             Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
             i.setType("application/octet-stream");
