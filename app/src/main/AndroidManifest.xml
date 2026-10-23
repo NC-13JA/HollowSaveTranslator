@@ -3,6 +3,7 @@
     <application
         android:allowBackup="false"
         android:label="Hollow Save Translator"
+        android:icon="@drawable/ic_knight"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:supportsRtl="true">
         <activity
